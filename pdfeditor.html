@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Power Tool - Merge, Split & Edit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- pdf-lib for manipulation -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- pdf.js for rendering previews -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .page-thumbnail {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .loader {
+            border-top-color: #3b82f6;
+            animation: spinner 0.6s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b px-6 py-4 flex items-center justify-between z-10 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-red-600 p-2 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-slate-800">PDF Power Tool</h1>
+        </div>
+        <div class="flex gap-4">
+            <button id="resetBtn" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 transition-colors">Clear All</button>
+            <button id="downloadBtn" class="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 shadow-md transition-all hidden">Export PDF</button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r flex flex-col p-4 gap-2 overflow-y-auto">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">Tools</p>
+            
+            <button onclick="switchTab('merge')" class="tab-btn active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-50 text-blue-600" data-tab="merge">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Merge Files
+            </button>
+            
+            <button onclick="switchTab('split')" class="tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:bg-slate-50" data-tab="split">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m0-14l4.121 4.121" />
+                </svg>
+                Split / Manage
+            </button>
+
+            <button onclick="switchTab('meta')" class="tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:bg-slate-50" data-tab="meta">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Metadata
+            </button>
+
+            <button onclick="switchTab('convert')" class="tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:bg-slate-50" data-tab="convert">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Image to PDF
+            </button>
+
+            <div class="mt-auto p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    All processing happens in your browser. Files never leave your device. 🔒
+                </p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
+            
+            <!-- Dynamic Toolbar for Current Tool -->
+            <div id="toolHeader" class="bg-white border-b px-8 py-3 flex items-center justify-between">
+                <h2 id="toolTitle" class="text-lg font-semibold text-slate-800">Merge PDF Files</h2>
+                <div id="toolActions" class="flex gap-2">
+                    <input type="file" id="fileInput" class="hidden" multiple accept="application/pdf">
+                    <button onclick="document.getElementById('fileInput').click()" class="bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-slate-900 transition-all flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div id="workspace" class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                
+                <!-- Initial Upload State -->
+                <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center">
+                    <div id="dropZone" class="drop-zone w-full max-w-2xl h-64 rounded-2xl flex flex-col items-center justify-center cursor-pointer">
+                        <div class="bg-blue-50 p-4 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-700">Drop PDF files here</h3>
+                        <p class="text-slate-500 mt-2">or click to browse from your computer</p>
+                    </div>
+                </div>
+
+                <!-- Merge View: List of Files -->
+                <div id="mergeView" class="hidden grid grid-cols-1 gap-4 max-w-4xl mx-auto">
+                    <!-- File rows will be injected here -->
+                </div>
+
+                <!-- Split/Manage View: Grid of Pages -->
+                <div id="splitView" class="hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <!-- Page thumbnails will be injected here -->
+                </div>
+
+                <!-- Metadata View -->
+                <div id="metaView" class="hidden max-w-xl mx-auto space-y-6">
+                    <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+                        <h3 class="font-bold text-slate-700 border-b pb-2">Document Info</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Title</label>
+                            <input type="text" id="metaTitle" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Author</label>
+                            <input type="text" id="metaAuthor" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Subject</label>
+                            <input type="text" id="metaSubject" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Keywords</label>
+                            <input type="text" id="metaKeywords" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Separated by commas">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversion View -->
+                <div id="convertView" class="hidden h-full flex flex-col items-center justify-center text-center">
+                    <div id="imageDropZone" class="drop-zone w-full max-w-2xl h-64 rounded-2xl flex flex-col items-center justify-center cursor-pointer">
+                        <div class="bg-green-50 p-4 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-700">Drop Images here</h3>
+                        <p class="text-slate-500 mt-2">Convert JPG/PNG to PDF instantly</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <p class="text-slate-600 font-medium" id="loadingText">Processing PDF...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification system -->
+    <div id="notificationArea" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2"></div>
+
+    <script>
+        // Global State
+        let currentTab = 'merge';
+        let pdfFiles = []; // Array of { name, bytes, id, totalPages }
+        let extractedPages = []; // Array of { fileIndex, pageIndex, id, rotation, previewUrl }
+        
+        const { PDFDocument, rgb, degrees } = PDFLib;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Initialization
+        window.addEventListener('load', () => {
+            initEvents();
+        });
+
+        function initEvents() {
+            const fileInput = document.getElementById('fileInput');
+            const dropZone = document.getElementById('dropZone');
+            const imageDropZone = document.getElementById('imageDropZone');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+            
+            // Drag and Drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                imageDropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('active'), false);
+                imageDropZone.addEventListener(eventName, () => imageDropZone.classList.add('active'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('active'), false);
+                imageDropZone.addEventListener(eventName, () => imageDropZone.classList.remove('active'), false);
+            });
+
+            dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+            imageDropZone.addEventListener('drop', (e) => handleImages(e.dataTransfer.files));
+            dropZone.onclick = () => fileInput.click();
+            imageDropZone.onclick = () => {
+                const imgInput = document.createElement('input');
+                imgInput.type = 'file';
+                imgInput.accept = 'image/*';
+                imgInput.multiple = true;
+                imgInput.onchange = (e) => handleImages(e.target.files);
+                imgInput.click();
+            };
+
+            downloadBtn.onclick = generatePdf;
+            resetBtn.onclick = resetApp;
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            
+            showLoading("Reading files...");
+            
+            for (let file of files) {
+                if (file.type !== 'application/pdf') {
+                    showNotification("Skipping non-PDF file: " + file.name, "error");
+                    continue;
+                }
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    const fileId = Math.random().toString(36).substr(2, 9);
+                    
+                    pdfFiles.push({
+                        id: fileId,
+                        name: file.name,
+                        bytes: arrayBuffer,
+                        totalPages: pdfDoc.getPageCount()
+                    });
+
+                    // If in Split mode, extract pages immediately
+                    if (currentTab === 'split') {
+                        await extractPagesFromFile(arrayBuffer, pdfFiles.length - 1);
+                    }
+
+                } catch (err) {
+                    showNotification("Error reading " + file.name, "error");
+                    console.error(err);
+                }
+            }
+
+            hideLoading();
+            renderWorkspace();
+        }
+
+        async function handleImages(files) {
+            showLoading("Converting images...");
+            try {
+                const pdfDoc = await PDFDocument.create();
+                for (let file of files) {
+                    if (!file.type.startsWith('image/')) continue;
+                    
+                    const imgBuffer = await file.arrayBuffer();
+                    let image;
+                    if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+                        image = await pdfDoc.embedJpg(imgBuffer);
+                    } else if (file.type === 'image/png') {
+                        image = await pdfDoc.embedPng(imgBuffer);
+                    }
+
+                    if (image) {
+                        const page = pdfDoc.addPage([image.width, image.height]);
+                        page.drawImage(image, {
+                            x: 0,
+                            y: 0,
+                            width: image.width,
+                            height: image.height,
+                        });
+                    }
+                }
+
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "converted_images.pdf";
+                a.click();
+                showNotification("Image PDF created and downloaded!", "success");
+            } catch (err) {
+                showNotification("Image conversion failed", "error");
+                console.error(err);
+            }
+            hideLoading();
+        }
+
+        async function extractPagesFromFile(buffer, fileIndex) {
+            const loadingTask = pdfjsLib.getDocument({ data: buffer });
+            const pdf = await loadingTask.promise;
+            
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 0.3 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                
+                extractedPages.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    fileIndex: fileIndex,
+                    pageIndex: i - 1,
+                    rotation: 0,
+                    previewUrl: canvas.toDataURL()
+                });
+            }
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // UI Updates
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'text-blue-600');
+                btn.classList.add('text-slate-600');
+            });
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+            activeBtn.classList.remove('text-slate-600');
+
+            const titles = {
+                'merge': 'Merge PDF Files',
+                'split': 'Split & Manage Pages',
+                'meta': 'Edit PDF Metadata',
+                'convert': 'Convert Images to PDF'
+            };
+            document.getElementById('toolTitle').innerText = titles[tabId];
+
+            // If we have files and switch to split, ensure pages are loaded
+            if (pdfFiles.length > 0 && tabId === 'split' && extractedPages.length === 0) {
+                rebuildExtractedPages();
+            }
+
+            renderWorkspace();
+        }
+
+        async function rebuildExtractedPages() {
+            showLoading("Preparing page previews...");
+            extractedPages = [];
+            for (let i = 0; i < pdfFiles.length; i++) {
+                await extractPagesFromFile(pdfFiles[i].bytes, i);
+            }
+            hideLoading();
+            renderWorkspace();
+        }
+
+        function renderWorkspace() {
+            const emptyState = document.getElementById('emptyState');
+            const mergeView = document.getElementById('mergeView');
+            const splitView = document.getElementById('splitView');
+            const metaView = document.getElementById('metaView');
+            const convertView = document.getElementById('convertView');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // Hide all
+            [emptyState, mergeView, splitView, metaView, convertView].forEach(v => v.classList.add('hidden'));
+
+            if (currentTab === 'convert') {
+                convertView.classList.remove('hidden');
+                downloadBtn.classList.add('hidden');
+                return;
+            }
+
+            if (pdfFiles.length === 0) {
+                emptyState.classList.remove('hidden');
+                downloadBtn.classList.add('hidden');
+                return;
+            }
+
+            downloadBtn.classList.remove('hidden');
+
+            if (currentTab === 'merge') {
+                mergeView.classList.remove('hidden');
+                mergeView.innerHTML = pdfFiles.map((f, idx) => `
+                    <div class="bg-white p-4 rounded-xl border flex items-center justify-between shadow-sm hover:border-blue-300 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-slate-100 p-2 rounded text-slate-500 font-bold text-xs">PDF</div>
+                            <div>
+                                <h4 class="font-medium text-slate-800">${f.name}</h4>
+                                <p class="text-xs text-slate-500">${f.totalPages} pages</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="moveFile(${idx}, -1)" class="p-2 hover:bg-slate-100 rounded text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg></button>
+                            <button onclick="moveFile(${idx}, 1)" class="p-2 hover:bg-slate-100 rounded text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button>
+                            <button onclick="removeFile(${idx})" class="p-2 hover:bg-red-50 text-red-400 rounded transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (currentTab === 'split') {
+                splitView.classList.remove('hidden');
+                splitView.innerHTML = extractedPages.map((p, idx) => `
+                    <div class="group relative bg-white p-2 rounded-xl border shadow-sm hover:shadow-md transition-all">
+                        <div class="aspect-[3/4] bg-slate-100 rounded overflow-hidden flex items-center justify-center">
+                            <img src="${p.previewUrl}" style="transform: rotate(${p.rotation}deg)" class="max-w-full max-h-full transition-transform">
+                        </div>
+                        <div class="mt-2 flex items-center justify-between px-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Page ${idx + 1}</span>
+                            <div class="flex gap-1">
+                                <button onclick="rotatePage(${idx})" class="p-1 hover:bg-blue-50 text-blue-500 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
+                                <button onclick="removePage(${idx})" class="p-1 hover:bg-red-50 text-red-500 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (currentTab === 'meta') {
+                metaView.classList.remove('hidden');
+            }
+        }
+
+        function moveFile(idx, dir) {
+            const target = idx + dir;
+            if (target < 0 || target >= pdfFiles.length) return;
+            const temp = pdfFiles[idx];
+            pdfFiles[idx] = pdfFiles[target];
+            pdfFiles[target] = temp;
+            
+            // If split view exists, it needs full rebuild because file order changed
+            extractedPages = []; 
+            renderWorkspace();
+        }
+
+        function removeFile(idx) {
+            pdfFiles.splice(idx, 1);
+            extractedPages = [];
+            renderWorkspace();
+        }
+
+        function rotatePage(idx) {
+            extractedPages[idx].rotation = (extractedPages[idx].rotation + 90) % 360;
+            renderWorkspace();
+        }
+
+        function removePage(idx) {
+            extractedPages.splice(idx, 1);
+            renderWorkspace();
+        }
+
+        async function generatePdf() {
+            showLoading("Generating your PDF...");
+            try {
+                const finalDoc = await PDFDocument.create();
+
+                if (currentTab === 'merge') {
+                    for (const file of pdfFiles) {
+                        const donorDoc = await PDFDocument.load(file.bytes);
+                        const pages = await finalDoc.copyPages(donorDoc, donorDoc.getPageIndices());
+                        pages.forEach(p => finalDoc.addPage(p));
+                    }
+                } else if (currentTab === 'split') {
+                    // This covers extraction, deletion, and rotation
+                    // We need to group extracted pages by their source file to copy efficiently
+                    for (const entry of extractedPages) {
+                        const donorDoc = await PDFDocument.load(pdfFiles[entry.fileIndex].bytes);
+                        const [copiedPage] = await finalDoc.copyPages(donorDoc, [entry.pageIndex]);
+                        if (entry.rotation !== 0) {
+                            copiedPage.setRotation(degrees(entry.rotation));
+                        }
+                        finalDoc.addPage(copiedPage);
+                    }
+                }
+
+                // Add Metadata if on Meta tab or just generally
+                finalDoc.setTitle(document.getElementById('metaTitle').value || "My Document");
+                finalDoc.setAuthor(document.getElementById('metaAuthor').value || "PDF Power Tool");
+                finalDoc.setSubject(document.getElementById('metaSubject').value || "");
+                finalDoc.setKeywords((document.getElementById('metaKeywords').value || "").split(','));
+
+                const pdfBytes = await finalDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `output_${new Date().getTime()}.pdf`;
+                a.click();
+                
+                showNotification("PDF Successfully Generated!", "success");
+            } catch (err) {
+                console.error(err);
+                showNotification("Error generating PDF: " + err.message, "error");
+            }
+            hideLoading();
+        }
+
+        function resetApp() {
+            pdfFiles = [];
+            extractedPages = [];
+            document.getElementById('metaTitle').value = "";
+            document.getElementById('metaAuthor').value = "";
+            document.getElementById('metaSubject').value = "";
+            document.getElementById('metaKeywords').value = "";
+            renderWorkspace();
+            showNotification("Workspace cleared", "info");
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showNotification(msg, type = 'info') {
+            const area = document.getElementById('notificationArea');
+            const note = document.createElement('div');
+            const colors = {
+                'success': 'bg-green-600',
+                'error': 'bg-red-600',
+                'info': 'bg-slate-800'
+            };
+            
+            note.className = `${colors[type]} text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium transform transition-all translate-y-10 opacity-0`;
+            note.innerText = msg;
+            
+            area.appendChild(note);
+            
+            // Animation
+            setTimeout(() => {
+                note.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                note.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => note.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
