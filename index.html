@@ -17,12 +17,12 @@
             --primary: #6366f1;
             --primary-dark: #4f46e5;
             --bg: #f8fafc;
-            --text: #1e1b4b; /* Deep Indigo for maximum readability in light mode */
-            --text-muted: #475569; /* Slate-600 for secondary text */
-            --glass: rgba(255, 255, 255, 0.95);
-            --glass-border: rgba(99, 102, 241, 0.3);
+            --text: #1e1b4b;
+            --text-muted: #475569;
+            --glass: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(99, 102, 241, 0.2);
             --card-shadow: rgba(31, 38, 135, 0.1);
-            --mesh-opacity: 0.15;
+            --mesh-opacity: 0.1;
         }
 
         .dark {
@@ -32,7 +32,7 @@
             --glass: rgba(30, 41, 59, 0.75);
             --glass-border: rgba(255, 255, 255, 0.05);
             --card-shadow: rgba(0, 0, 0, 0.4);
-            --mesh-opacity: 0.35;
+            --mesh-opacity: 0.25;
         }
 
         body {
@@ -41,9 +41,11 @@
             color: var(--text);
             overflow-x: hidden;
             background-color: var(--bg);
-            transition: background-color 0.5s ease, color 0.5s ease;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Optimized Mesh Background for Performance */
         .mesh-bg {
             position: fixed;
             top: 0;
@@ -53,41 +55,36 @@
             z-index: -1;
             background-color: var(--bg);
             background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            filter: blur(100px) saturate(150%);
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 40%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 40%);
+            filter: blur(60px); /* Reduced blur for mobile performance */
             opacity: var(--mesh-opacity);
-            animation: mesh-flow 25s infinite alternate;
-            transition: opacity 0.8s ease;
+            will-change: transform, opacity;
+            animation: mesh-flow 30s infinite alternate linear;
         }
 
         @keyframes mesh-flow {
-            0% { transform: scale(1) translate(0,0); }
-            100% { transform: scale(1.15) translate(3%, 3%); }
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
         }
 
         .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px); /* Reduced from 20px to improve mobile FPS */
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 12px 40px 0 var(--card-shadow);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s ease, border 0.5s ease;
-        }
-
-        .tool-card {
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: 0 10px 30px 0 var(--card-shadow);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s ease;
+            will-change: transform;
         }
 
         .tool-card:hover {
-            transform: scale(1.04) translateY(-4px);
-            background: var(--glass);
-            box-shadow: 0 25px 50px -10px rgba(99, 102, 241, 0.2);
+            transform: scale(1.03) translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.25);
         }
 
         .nav-link {
-            transition: all 0.3s ease;
+            transition: color 0.3s ease;
             position: relative;
             cursor: pointer;
             color: var(--text-muted);
@@ -103,59 +100,37 @@
             width: 0%;
             height: 2px;
             background: var(--primary);
-            transition: all 0.3s ease;
+            transition: width 0.3s ease;
             transform: translateX(-50%);
         }
         .nav-link:hover::after { width: 100%; }
 
         .drop-zone {
             border: 2px dashed var(--text-muted);
-            opacity: 0.8;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
         }
 
         .drop-zone.dragover {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.1);
-            transform: scale(1.02);
-            opacity: 1;
         }
 
         .animate-stagger > * {
             opacity: 0;
-            transform: translateY(20px);
-            animation: fade-up 0.8s forwards cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateY(15px);
+            animation: fade-up 0.5s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         @keyframes fade-up {
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .pulse-soft {
-            animation: pulse-soft 2.5s infinite;
-        }
-
-        @keyframes pulse-soft {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3); }
-            50% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
-        }
-
-        .loading-bar {
-            width: 0%;
-            transition: width 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-        }
-
-        .active-format {
-            background-color: var(--primary) !important;
-            color: white !important;
-            box-shadow: 0 10px 20px -3px rgba(99, 102, 241, 0.4);
-        }
-
         #toast {
             background: #0f172a;
             color: #ffffff;
-            border-left: 8px solid var(--primary);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-left: 6px solid var(--primary);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+            will-change: transform, opacity;
         }
 
         .dark #toast {
@@ -163,25 +138,13 @@
             color: #0f172a;
         }
 
-        .result-item {
-            transition: all 0.3s ease;
-        }
-        .result-item:hover {
-            transform: translateY(-4px);
-        }
-
-        .result-item.selected {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-        }
-
         .floating-action-btn {
             position: fixed;
             bottom: 2rem;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
+            transform: translateX(-50%) translateY(120px);
             z-index: 150;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
             opacity: 0;
         }
 
@@ -198,34 +161,27 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
             background: var(--glass);
             border: 1px solid var(--glass-border);
         }
 
-        .theme-toggle:hover {
-            transform: rotate(30deg) scale(1.15);
-            background: white;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        }
-
-        .dark .theme-toggle:hover {
-            background: #1e293b;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-        }
+        .theme-toggle:active { transform: scale(0.9); }
 
         @media (max-width: 640px) {
-            #tools-grid { grid-template-columns: 1fr; }
-            .tool-card { padding: 1rem !important; }
-            .tool-card h3 { font-size: 1.125rem !important; }
-            .tool-card p { font-size: 0.75rem !important; }
+            .mesh-bg { animation: none; filter: blur(40px); } /* Disable bg animation on small screens */
+            #tools-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .tool-card { padding: 1.25rem !important; border-radius: 1.5rem !important; }
+            .tool-card h3 { font-size: 1.1rem !important; }
+            .tool-card p { font-size: 0.75rem !important; margin-top: 0.25rem; }
+            .tool-card i { font-size: 1.25rem !important; }
+            .glass-card { backdrop-filter: none; background: var(--glass); } /* Hardware-friendly mode for mobile */
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="mesh-bg"></div>
 
-    <!-- Navigation -->
     <nav class="max-w-6xl mx-auto flex items-center justify-between mb-8 md:mb-16 glass-card rounded-2xl md:rounded-3xl p-3 md:p-4 md:px-10 sticky top-4 z-50 relative">
         <div class="flex items-center gap-3 cursor-pointer group z-10" onclick="showSection('home')">
             <div class="w-10 h-10 md:w-12 md:h-12 bg-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-xl group-hover:rotate-12 transition-transform duration-300">
@@ -250,17 +206,18 @@
         <!-- Home Section -->
         <section id="home-section" class="block">
             <div class="text-center mb-12 md:mb-20 animate-stagger">
-                <h1 class="text-3xl md:text-7xl font-black mb-4 md:mb-6 leading-[1.1] tracking-tight" style="color: var(--text); animation-delay: 100ms">
+                <h1 class="text-3xl md:text-7xl font-black mb-4 md:mb-6 leading-[1.1] tracking-tight" style="color: var(--text); animation-delay: 50ms">
                     The Ultimate Way to <br class="hidden md:block"> <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-indigo-600 to-pink-500">Edit your PDFs.</span>
                 </h1>
-                <p class="text-base md:text-xl max-w-2xl mx-auto font-medium px-4" style="color: var(--text-muted); animation-delay: 200ms">
+                <p class="text-base md:text-xl max-w-2xl mx-auto font-medium px-4" style="color: var(--text-muted); animation-delay: 100ms">
                     Professional-grade PDF tools that run entirely in your browser. 
-                    Zero uploads, absolute privacy, total power.
+                    Zero uploads, absolute privacy, optimized for speed.
                 </p>
             </div>
 
             <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 animate-stagger">
-                <div onclick="openTool('merge')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 300ms">
+                <!-- Staggered delays reduced for mobile snapiness -->
+                <div onclick="openTool('merge')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 150ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-object-group text-lg md:text-2xl"></i>
                     </div>
@@ -268,7 +225,7 @@
                     <p class="text-xs md:text-base font-medium leading-relaxed" style="color: var(--text-muted)">Combine and reorder multiple documents with live previews.</p>
                 </div>
 
-                <div onclick="openTool('split')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 400ms">
+                <div onclick="openTool('split')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 200ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-scissors text-lg md:text-2xl"></i>
                     </div>
@@ -276,7 +233,7 @@
                     <p class="text-xs md:text-base font-medium leading-relaxed" style="color: var(--text-muted)">Extract specific pages or merge a selection of pages.</p>
                 </div>
 
-                <div onclick="openTool('compress')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 500ms">
+                <div onclick="openTool('compress')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 250ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-green-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-compress-arrows-alt text-lg md:text-2xl"></i>
                     </div>
@@ -284,7 +241,7 @@
                     <p class="text-xs md:text-base font-medium leading-relaxed" style="color: var(--text-muted)">Shrink file sizes without sacrificing quality.</p>
                 </div>
 
-                <div onclick="openTool('metadata')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 600ms">
+                <div onclick="openTool('metadata')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 300ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-info-circle text-lg md:text-2xl"></i>
                     </div>
@@ -292,7 +249,7 @@
                     <p class="text-xs md:text-base font-medium leading-relaxed" style="color: var(--text-muted)">Modify Author, Title, and Creator properties.</p>
                 </div>
 
-                <div onclick="openTool('pdf2img')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 700ms">
+                <div onclick="openTool('pdf2img')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 350ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-pink-100 dark:bg-pink-900/30 text-pink-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-pink-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-file-image text-lg md:text-2xl"></i>
                     </div>
@@ -300,7 +257,7 @@
                     <p class="text-xs md:text-base font-medium leading-relaxed" style="color: var(--text-muted)">Convert all PDF pages into images with bulk ZIP export.</p>
                 </div>
 
-                <div onclick="openTool('img2pdf')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 800ms">
+                <div onclick="openTool('img2pdf')" class="tool-card glass-card p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] group" style="animation-delay: 400ms">
                     <div class="w-10 h-10 md:w-16 md:h-16 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-xl md:rounded-3xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <i class="fas fa-images text-lg md:text-2xl"></i>
                     </div>
@@ -312,7 +269,7 @@
 
         <!-- Workspace Section -->
         <section id="workspace-section" class="hidden scroll-mt-24">
-            <div class="mb-6 md:mb-10 flex items-center gap-4 md:gap-6 animate-stagger">
+            <div class="mb-6 md:mb-10 flex items-center gap-4 md:gap-6">
                 <button onclick="showSection('home')" class="w-10 h-10 md:w-14 md:h-14 flex items-center justify-center rounded-xl md:rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-xl transition-all active:scale-90" style="color: var(--text)">
                     <i class="fas fa-chevron-left text-base md:text-xl"></i>
                 </button>
@@ -321,10 +278,10 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
                 <div class="lg:col-span-2 space-y-8">
-                    <div id="drop-zone" class="drop-zone glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-16 flex flex-col items-center justify-center text-center min-h-[350px] md:min-h-[450px] relative overflow-hidden group">
+                    <div id="drop-zone" class="drop-zone glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-16 flex flex-col items-center justify-center text-center min-h-[300px] md:min-h-[450px] relative overflow-hidden group">
                         <div class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                        <div class="mb-6 md:mb-8 w-20 h-20 md:w-28 md:h-28 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center text-indigo-600 shadow-inner pulse-soft pointer-events-none">
-                            <i id="tool-icon" class="fas fa-cloud-upload-alt text-3xl md:text-5xl"></i>
+                        <div class="mb-6 md:mb-8 w-16 h-16 md:w-28 md:h-28 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center text-indigo-600 shadow-inner pulse-soft pointer-events-none">
+                            <i id="tool-icon" class="fas fa-cloud-upload-alt text-2xl md:text-5xl"></i>
                         </div>
                         <h4 class="text-lg md:text-2xl font-black mb-2 md:mb-3 pointer-events-none" style="color: var(--text)">Drop your files here</h4>
                         <p class="font-medium text-xs md:text-base mb-6 md:mb-10 max-sm pointer-events-none text-center" style="color: var(--text-muted)">Zero cloud uploads. Total privacy.</p>
@@ -335,16 +292,16 @@
                     </div>
 
                     <!-- Common Results Grid -->
-                    <div id="results-container" class="hidden animate-stagger pb-20">
+                    <div id="results-container" class="hidden pb-20">
                         <h3 class="text-xl font-black mb-6 flex items-center gap-3 text-indigo-900 dark:text-indigo-400">
                             <i id="results-icon" class="fas fa-th-large"></i> <span id="results-title">Processed Pages</span>
                         </h3>
-                        <div id="results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div id="results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                             <!-- Items injected by JS -->
                         </div>
                     </div>
 
-                    <div id="file-list" class="hidden mt-6 md:mt-10 space-y-3 md:space-y-4 animate-stagger"></div>
+                    <div id="file-list" class="hidden mt-6 md:mt-10 space-y-3 md:space-y-4"></div>
                 </div>
 
                 <!-- Sidebar Settings -->
@@ -362,18 +319,18 @@
                         </div>
                         <div id="processing-state" class="hidden my-6 md:my-8">
                             <div class="flex justify-between text-xs md:text-sm font-bold mb-2 md:mb-3">
-                                <span id="status-text" class="text-indigo-600 italic">Working...</span>
+                                <span id="status-text" class="text-indigo-600 italic font-medium">Working...</span>
                                 <span id="percent-text" style="color: var(--text)">0%</span>
                             </div>
                             <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 md:h-3 overflow-hidden shadow-inner">
-                                <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-indigo-700 h-full loading-bar"></div>
+                                <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-indigo-700 h-full transition-all duration-300"></div>
                             </div>
                         </div>
                         <button id="process-btn" onclick="startProcessing()" disabled class="w-full py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-white bg-slate-300 dark:bg-slate-700 cursor-not-allowed transition-all shadow-xl uppercase tracking-widest text-xs md:text-sm">
                             Apply Changes
                         </button>
                         <div id="download-area" class="hidden mt-4 md:mt-6">
-                            <a id="download-link" href="#" class="flex items-center justify-center gap-2 md:gap-3 w-full py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-white bg-green-500 hover:bg-green-600 transition-all shadow-2xl pulse-animation uppercase tracking-widest text-xs md:text-sm">
+                            <a id="download-link" href="#" class="flex items-center justify-center gap-2 md:gap-3 w-full py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-white bg-green-500 hover:bg-green-600 transition-all shadow-2xl uppercase tracking-widest text-xs md:text-sm">
                                 <i class="fas fa-file-download text-base md:text-lg"></i> Download Ready
                             </a>
                             <p id="savings-info" class="text-center text-[10px] mt-3 md:mt-4 font-black uppercase tracking-widest" style="color: var(--primary)"></p>
@@ -384,17 +341,17 @@
         </section>
 
         <!-- Dynamic Floating Action Button -->
-        <div id="floating-action-container" class="floating-action-btn">
-            <button id="floating-action-btn" onclick="handleBulkAction()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-black shadow-2xl transition-all flex items-center gap-3 active:scale-95 group">
+        <div id="floating-action-container" class="floating-action-btn w-full md:w-auto px-4 md:px-0">
+            <button id="floating-action-btn" onclick="handleBulkAction()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-black shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 group">
                 <i id="floating-btn-icon" class="fas fa-layer-group group-hover:rotate-12 transition-transform"></i>
-                <span id="floating-btn-text">Merge & Download Selected</span> (<span id="selected-count">0</span>)
+                <span id="floating-btn-text">Merge & Download</span> (<span id="selected-count">0</span>)
             </button>
         </div>
 
         <footer class="mt-16 md:mt-24 pb-8 md:pb-12 text-center">
             <div class="inline-flex items-center gap-2 md:gap-3 glass-card px-5 md:px-8 py-2 md:py-3 rounded-full font-bold text-[10px] md:text-sm" style="color: var(--text)">
                 <i class="fas fa-shield-alt text-green-500"></i>
-                All processing happens in your browser. Files never leave your device.
+                Browser-local processing. No uploads.
             </div>
             <p class="mt-4 md:mt-6 font-medium text-[9px] md:text-xs text-center" style="color: var(--text-muted)">© 2026 PDF Ultimate. All rights reserved.</p>
         </footer>
@@ -458,7 +415,7 @@
             currentTool = toolKey;
             const config = toolConfig[toolKey];
             document.getElementById('tool-title').innerText = config.title;
-            document.getElementById('tool-icon').className = `fas ${config.icon} text-3xl md:text-5xl`;
+            document.getElementById('tool-icon').className = `fas ${config.icon} text-2xl md:text-5xl`;
             resetWorkspace();
             showSection('workspace');
             setTimeout(() => {
@@ -484,15 +441,15 @@
             
             const btn = document.getElementById('process-btn');
             btn.disabled = true;
-            btn.classList.add('bg-slate-300', 'dark:bg-slate-700', 'cursor-not-allowed');
-            btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'hidden', 'bg-green-500');
+            btn.className = "w-full py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-white bg-slate-300 dark:bg-slate-700 cursor-not-allowed transition-all shadow-xl uppercase tracking-widest text-xs md:text-sm";
+            
             document.getElementById('download-area').classList.add('hidden');
             document.getElementById('processing-state').classList.add('hidden');
             const savingsInfo = document.getElementById('savings-info');
             if (savingsInfo) savingsInfo.innerText = '';
             
             document.getElementById('dynamic-options').innerHTML = `
-                <div class="text-center py-6 md:py-10">
+                <div class="text-center py-6 md:py-10 text-slate-900 dark:text-slate-100">
                     <i class="fas fa-layer-group text-slate-300 dark:text-slate-700 text-4xl md:text-5xl mb-3 md:mb-4"></i>
                     <p class="font-bold uppercase tracking-widest text-[9px] md:text-[10px]" style="color: var(--text-muted)">Waiting for upload</p>
                 </div>`;
@@ -518,7 +475,7 @@
                 updateOptions();
                 const btn = document.getElementById('process-btn');
                 btn.disabled = false;
-                btn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+                btn.classList.remove('bg-slate-300', 'dark:bg-slate-700', 'cursor-not-allowed');
                 btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }
         }
@@ -537,7 +494,7 @@
                         const bytes = await file.arrayBuffer();
                         const pdfDocJS = await pdfjsLib.getDocument({data: bytes.slice(0)}).promise;
                         const page = await pdfDocJS.getPage(1);
-                        const viewport = page.getViewport({scale: 0.15});
+                        const viewport = page.getViewport({scale: 0.1}); // Optimized for mobile RAM
                         const canvas = document.createElement('canvas');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
@@ -558,11 +515,11 @@
                     </div>
                     <div class="flex items-center gap-2">
                         ${currentTool === 'merge' ? `
-                            <button onclick="moveFile(${index}, -1)" class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-all ${index === 0 ? 'opacity-20 pointer-events-none' : ''}">
-                                <i class="fas fa-chevron-up text-xs"></i>
+                            <button onclick="moveFile(${index}, -1)" class="w-7 h-7 md:w-8 md:h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-all ${index === 0 ? 'opacity-20 pointer-events-none' : ''}">
+                                <i class="fas fa-chevron-up text-[10px]"></i>
                             </button>
-                            <button onclick="moveFile(${index}, 1)" class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-all ${index === uploadedFiles.length - 1 ? 'opacity-20 pointer-events-none' : ''}">
-                                <i class="fas fa-chevron-down text-xs"></i>
+                            <button onclick="moveFile(${index}, 1)" class="w-7 h-7 md:w-8 md:h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-all ${index === uploadedFiles.length - 1 ? 'opacity-20 pointer-events-none' : ''}">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
                             </button>
                         ` : ''}
                         <button onclick="removeFile(${index})" class="w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-300 hover:text-red-500 transition-all flex items-center justify-center">
@@ -600,7 +557,7 @@
             const container = document.getElementById('dynamic-options');
             let html = '';
             if (currentTool === 'merge') {
-                html = `<div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 text-center"><p class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">Use arrows to reorder items.</p></div>`;
+                html = `<div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 text-center"><p class="text-indigo-900 dark:text-indigo-400 font-bold text-sm">Use arrows to reorder items.</p></div>`;
             } else if (currentTool === 'compress') {
                 html = `<div class="space-y-4"><label class="block text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Target Reduction</label><input id="comp-level" type="range" min="1" max="100" value="60" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"><div class="flex justify-between font-bold text-[10px]" style="color: var(--text-muted)"><span>Balanced</span><span>Ultra</span></div></div>`;
             } else if (currentTool === 'metadata') {
@@ -608,7 +565,7 @@
             } else if (currentTool === 'pdf2img') {
                 html = `<label class="block text-[10px] font-black uppercase tracking-widest mb-3" style="color: var(--text)">Format Output</label><div class="grid grid-cols-2 gap-3"><button onclick="setFormat('JPG')" class="format-btn py-3 md:py-4 rounded-xl md:rounded-2xl border-2 transition-all font-black text-xs ${exportFormat==='JPG'?'active-format':'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400'}">JPG</button><button onclick="setFormat('PNG')" class="format-btn py-3 md:py-4 rounded-xl md:rounded-2xl border-2 transition-all font-black text-xs ${exportFormat==='PNG'?'active-format':'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400'}">PNG</button></div>`;
             } else {
-                html = `<div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 dark:border-indigo-900/30 text-center"><p class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">Ready to transform items.</p></div>`;
+                html = `<div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 dark:border-indigo-900/30 text-center"><p class="text-indigo-900 dark:text-indigo-400 font-bold text-sm">Ready to transform items.</p></div>`;
             }
             container.innerHTML = html;
         }
@@ -652,7 +609,7 @@
                     setupDownload(resultBlob, fileName);
                 } else if (currentTool === 'split' || currentTool === 'pdf2img') {
                     const isImg = currentTool === 'pdf2img';
-                    statusText.innerText = isImg ? "Converting to images..." : "Extracting all pages...";
+                    statusText.innerText = isImg ? "Generating Images..." : "Splitting Pages...";
                     const grid = document.getElementById('results-grid');
                     grid.innerHTML = '';
                     generatedBlobs = [];
@@ -663,13 +620,13 @@
 
                     document.getElementById('results-title').innerText = isImg ? "Images for Download" : "Extracted Pages";
                     document.getElementById('results-icon').className = isImg ? "fas fa-images" : "fas fa-th-large";
-                    document.getElementById('floating-btn-text').innerText = isImg ? "Download Selected ZIP" : "Merge Selected Pages";
+                    document.getElementById('floating-btn-text').innerText = isImg ? "Download ZIP" : "Merge Selected";
 
                     const sourcePdfForSplit = !isImg ? await PDFDocument.load(originalBytes.slice(0)) : null;
 
                     for (let i = 1; i <= pageCount; i++) {
                         const page = await pdfDocJS.getPage(i);
-                        const viewport = page.getViewport({ scale: isImg ? 2.0 : 0.4 });
+                        const viewport = page.getViewport({ scale: isImg ? 1.5 : 0.25 }); // Low scale for previews to save memory
                         const canvas = document.createElement('canvas');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
@@ -692,21 +649,21 @@
                         
                         const item = document.createElement('div');
                         item.id = `result-item-${i-1}`;
-                        item.className = 'result-item glass-card rounded-2xl p-3 flex flex-col relative group overflow-hidden';
+                        item.className = 'result-item glass-card rounded-2xl p-2 md:p-3 flex flex-col relative group overflow-hidden';
                         item.innerHTML = `
-                            <div class="w-full aspect-[1/1.4] mb-3 bg-white/10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative">
+                            <div class="w-full aspect-[1/1.4] mb-2 bg-white/10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative">
                                 <img src="${canvas.toDataURL()}" class="w-full h-full object-cover">
                                 <label class="absolute inset-0 cursor-pointer z-20">
                                     <input type="checkbox" class="hidden" onchange="toggleSelection(${i-1}, this)">
                                 </label>
-                                <div class="absolute top-2 left-2 w-6 h-6 rounded-md bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-600 flex items-center justify-center checkbox-indicator transition-all">
-                                    <i class="fas fa-check opacity-0 text-indigo-600 text-[10px]"></i>
+                                <div class="absolute top-1.5 left-1.5 w-5 h-5 rounded bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-600 flex items-center justify-center checkbox-indicator transition-all">
+                                    <i class="fas fa-check opacity-0 text-indigo-600 text-[9px]"></i>
                                 </div>
                             </div>
-                            <div class="flex justify-between items-center gap-2">
-                                <span class="text-[10px] font-black uppercase" style="color: var(--text-muted)">Page ${i}</span>
-                                <a href="${URL.createObjectURL(blob)}" download="page_${i}.${ext}" class="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all z-30 relative">
-                                    <i class="fas fa-download text-[10px]"></i>
+                            <div class="flex justify-between items-center gap-1">
+                                <span class="text-[9px] font-black uppercase" style="color: var(--text-muted)">Page ${i}</span>
+                                <a href="${URL.createObjectURL(blob)}" download="page_${i}.${ext}" class="p-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded hover:bg-indigo-600 hover:text-white transition-all z-30 relative">
+                                    <i class="fas fa-download text-[9px]"></i>
                                 </a>
                             </div>
                         `;
@@ -715,7 +672,7 @@
                         document.getElementById('percent-text').innerText = `${Math.round((i / pageCount) * 100)}%`;
                     }
                     document.getElementById('results-container').classList.remove('hidden');
-                    statusText.innerText = isImg ? "Images Generated!" : "Pages Split!";
+                    statusText.innerText = "Done!";
                     document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
                 } else if (currentTool === 'metadata') {
                     const pdf = await PDFDocument.load(await uploadedFiles[0].arrayBuffer());
@@ -739,11 +696,11 @@
                     bar.style.width = '100%';
                     document.getElementById('percent-text').innerText = '100%';
                     statusText.innerText = "Complete!";
-                    showToast("Your file is ready!", "success");
+                    showToast("Ready!", "success");
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Action failed: " + err.message, "error");
+                showToast("Failed: " + err.message, "error");
                 btn.classList.remove('hidden');
                 progressArea.classList.add('hidden');
             }
@@ -755,11 +712,11 @@
             
             if (el.checked) {
                 selectedIndices.add(idx);
-                parent.classList.add('selected');
+                parent.style.borderColor = "var(--primary)";
                 indicator.classList.remove('opacity-0');
             } else {
                 selectedIndices.delete(idx);
-                parent.classList.remove('selected');
+                parent.style.borderColor = "";
                 indicator.classList.add('opacity-0');
             }
             
@@ -778,23 +735,23 @@
         }
 
         async function downloadSelectedAsZip() {
-            showToast("Generating ZIP folder...", "success");
+            showToast("Generating ZIP...", "success");
             const zip = new JSZip();
             const indices = Array.from(selectedIndices).sort((a, b) => a - b);
             const ext = exportFormat.toLowerCase();
             for (let i = 0; i < indices.length; i++) {
                 const idx = indices[i];
-                zip.file(`image_page_${idx + 1}.${ext}`, generatedBlobs[idx]);
+                zip.file(`page_${idx + 1}.${ext}`, generatedBlobs[idx]);
             }
             const zipBlob = await zip.generateAsync({ type: "blob" });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(zipBlob);
-            link.download = `pdf_ultimate_images_${Date.now()}.zip`;
+            link.download = `pdf_ultimate_images.zip`;
             link.click();
         }
 
         async function mergeSelectedPages() {
-            showToast("Merging selected pages...", "success");
+            showToast("Merging Selected...", "success");
             const mergedPdf = await PDFDocument.create();
             const indices = Array.from(selectedIndices).sort((a, b) => a - b);
             for (const idx of indices) {
@@ -805,7 +762,7 @@
             const resultBlob = new Blob([await mergedPdf.save()], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(resultBlob);
-            link.download = `selection_merge_${Date.now()}.pdf`;
+            link.download = `selection_merge.pdf`;
             link.click();
         }
 
@@ -825,7 +782,7 @@
             setTimeout(() => {
                 toast.classList.add('opacity-0');
                 toast.classList.remove('opacity-100', '-translate-y-4');
-            }, 4000);
+            }, 3000);
         }
 
         window.onload = () => showSection('home');
